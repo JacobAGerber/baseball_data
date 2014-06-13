@@ -8,12 +8,14 @@ from collections import defaultdict
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 import sqlite3
+import xml.dom.minidom
 
 
 conn = sqlite3.connect('baseball.db')
 c = conn.cursor()
 c.execute('''CREATE TABLE game_ststs(Batter TEXT, Event TEXT, Balls TEXT)''')
 conn.commit()
+
 
 def get_game_id(*dates):
 #construct a base url and add list dates in a loop
@@ -36,9 +38,17 @@ def get_game_id(*dates):
 			except:
 				print None
 
-print get_game_id('2014_05_04','2014_05_03')
+def create_db_populate(get_game_id,db_creation):
+	get_game_id('2014_05_04','2014_05_03')
+	db_creation
+	with conn:
+		for i in get_game_id:
+			print i
 
 def db_creation():
 	conn = sqlite3.connect('baseball.db')
 	c = conn.cursor()
-	c.execute('''CREATE TABLE game_ststs(gameid TEXT, away_team TEXT, TEXT home_team TEXT, inningnum INTEGER, score INTEGER, away_team_runs INTEGER, home_team_runs INTEGER, next INTEGER, num INTEGER, b INTEGER, s INTEGER, o INTEGER, start_tfs REAL, start_tfs_zulu REAL, batter INTEGER, battingteam TEXT, stand TEXT, b_height TEXT, pitcher INTEGER, p_throws TEXT, playdes TEXT, esplaydes TEXT, event TEXT, des TEXT, des_es TEXT, id INTEGER, on_1b INTEGER, on_2b INTEGER, on_3b INTEGER, type TEXT, tfs INTEGER, tfs_zulu TEXT, x REAL, y REAL, sv_id TEXT, start_speed REAL, end_speed REAL, sz_top REAL, sz_bot REAL, pfx_x REAL, pfx_z REAL, px REAL, pz REAL, x0 REAL, y0 REAL, z0 REAL, vx0 REAL, vy0 REAL, vz0 REAL, ax REAL,  ay REL, az REAL, break_y REAL, break_angle REAL, break_length REAL, pitch_type TEXT, type_confidence REAL, zone INTEGER, nasty REAL, spin_dir REAL, spin_rate REAL, cc TEXT, mt TEXT)''')
+	c.execute('''CREATE TABLE game_ststs(Batter TEXT, Event TEXT, Balls TEXT)''')
+	
+	
+get_game_id('2014_05_04','2014_05_03')
