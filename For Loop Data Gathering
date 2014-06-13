@@ -21,10 +21,13 @@ def get_game_id(*dates):
 		g_id = [a.text.strip()[4:-1] for a in BeautifulSoup(urllib2.urlopen(fullurl)).find_all('li',text=re.compile("gid_"))]
 		for g in g_id:
 			game_id_url = baseURL + g[0:4] + '/month_' + g[5:7] + '/day_' + g[8:10] + '/gid_' + g + '/inning/inning_all.xml'
+			data = ET.parse(urllib2.urlopen(game_id_url))
 			try:
-				print ET.parse(urllib2.urlopen(game_id_url))
+				for baseball_stats in data.findall('inning/top/atbat'):
+					print baseball_stats.attrib['batter']
+					print baseball_stats.attrib['event']
 			except:
-				None
+				print None
 
 print get_game_id('2014_05_04','2014_05_03')
 
