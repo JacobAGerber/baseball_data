@@ -11,13 +11,13 @@ import sqlite3
 import xml.dom.minidom
 
 
-conn = sqlite3.connect('baseball.db')
-c = conn.cursor()
-c.execute('''CREATE TABLE game_stats(Batter TEXT, Event TEXT, Balls TEXT)''')
-conn.commit()
 
 
 def get_game_id(*dates):
+	conn = sqlite3.connect('baseball.db')
+	curs = conn.cursor()
+	curs.execute('''CREATE TABLE game_stats(Batter TEXT, Event TEXT, Balls TEXT)''')
+	conn.commit()
 #construct a base url and add list dates in a loop
 	baseURL = 'http://gd2.mlb.com/components/game/mlb/year_'
 	for date in dates:
@@ -34,21 +34,18 @@ def get_game_id(*dates):
 					event_number = baseball_stats.attrib['num']
 					event_play = baseball_stats.attrib['event']
 					des = baseball_stats.attrib['des']
-					c.execute('''INSERT INTO game_stats (Batter, Event, Balls) VALUES(?,?,?)''',(event_number,event_play,des))
+					curs.execute('INSERT INTO game_stats VALUES(?,?,?)',(event_number,event_play,des))
+					conn.commit()
+					print baseball_stats
 			except:
 				print None
 
 def create_db_populate(get_game_id,db_creation):
-	get_game_id('2014_05_04','2014_05_03')
+	get_game_id('2014_05_03','2014_05_04','2014_05_05','2014_05_06','2014_05_07','2014_05_08','2014_05_09''2014_05_10','2014_05_11','2014_05_12','2014_05_13','2014_05_14')
 	db_creation
 	with conn:
 		for i in get_game_id:
 			print i
-
-def db_creation():
-	conn = sqlite3.connect('baseball.db')
-	c = conn.cursor()
-	c.execute('''CREATE TABLE game_ststs(Batter TEXT, Event TEXT, Balls TEXT)''')
 	
 	
-get_game_id('2014_05_04','2014_05_03')
+get_game_id('2014_05_03','2014_05_04','2014_05_05','2014_05_06','2014_05_07','2014_05_08','2014_05_09''2014_05_10','2014_05_11','2014_05_12','2014_05_13','2014_05_14')
