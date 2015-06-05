@@ -1,52 +1,46 @@
-#!/usr/bin/python
-
-
-import urllib, urllib2,datetime,sys,getopt,os.path,re,os,requests
-from requests.exceptions import HTTPError
-from bs4 import BeautifulSoup
+from xml.dom import minidom
+import urllib
 import get_dates
-import re
+import os
+import csv
+
+failed_links = []
+
+save_path = 'C:\Python27\mlb_python'
+#Create batting file with boxscore
+file_name = os.path.join(save_path,'pitch_detail_box.csv')
+pitch_outfile = open(file_name, 'a')
 
 
-def statFind(stat_tag,block_text):
-	stat_start = block_text.find(stat_tag + "=") + len(stat_tag) + 2
-	stat_end = block_text.find("\"",stat_start)
-	if stat_start - len(stat_tag) - 2 == -1:
-		stat = 0
-	else:
-		stat = block_text[stat_start:stat_end]
-	return str(stat)
+d_dates = get_dates.get_month('08','2012')
 
-	
-def get_inning_data():
-	
-	save_path = 'C:\Python27\mlb_python'
-	#Create batting file with boxscore
-	bat_outfile_name = os.path.join(save_path,'mlbbatbox.csv')
-	bat_outfile = open(bat_outfile_name, 'a')
-	
-	#Create CSV headers for writing (Batting)
-	bat_headers = "game_id,batter_id,name,pos,bo,at_bats,po,runs,a,bb,sac,t,sf,hits,errors,d,hbp,so,hr,rbi,lob,fldg,sb"
-	bat_outfile.write(bat_headers + "\n")	
-	
-	d_dates = get_dates.get_game_block_text('m',day='00',month='09',year='2012')
-		
-	for link in d_dates:
-		#print 'Gathering data for link: ' + '\n' + link + '\n'
-		page_url = link + '/inning/inning_all.xml'
-		boxpage = urllib.urlopen(page_url)
-		box = boxpage.read()
-		inning_location = [m.start() for m in re.finditer(r'inning num',box)]
-		inning_total = len(inning_location)
-		for inning in range(1, inning_total + 1):
-			print inning
-			inning_start = box.find("<inning num=\"" + str(inning) ) 
-			inning_end = box.find('/inning',inning_start) 
-			inning_split = box[inning_start:inning_end]
-			at_bat_location = [m.start() for m in re.finditer(r"atbat num",inning_split)]
-			for at_bat_seq in at_bat_location:
-				bat_start = inning_split.find("<atbat num")
-				bat_end = inning_split.find("/atbat",bat_start)
-				bat_details = inning_split[bat_start:bat_end]
-				
-		
+for g_id_list in d_dates:
+		for link in g_id_list:
+			try:
+				print "Opening Game: " + link
+				url = "http://gd2.mlb.com/components/game/mlb/year_" + str(link[0:4]) + '/month_' + str(link[5:7]) + '/day_' + str(link[8:10]) + '/gid_' + str(link) + '/inning/inning_all.xml'
+				url = urllib.urlopen(url) 
+				xml_data = minidom.parse(url)
+				xml_data_inning = xml_data.getElementsByTagName('atbat')
+			except:
+				print "Failed Link: " + link
+				failed_links.append(link)
+			for at_bats in xml_data_inning:
+				at_bat_data = at_bats.getElementsByTagName('pitch')
+				at_bat_items = ['num','b','s','o','batter','stand','b_height','pitcher','p_throws','event']
+				at_bat_dict = (dict(at_bats.attributes.items()))
+				for del_keys in at_bat_dict.keys():
+					if del_keys not in at_bat_items:
+						del at_bat_dict[del_keys]
+				dict_copy = at_bat_dict.copy()
+				for pitch_data in at_bat_data:
+					pitch_items = ['id','type','x','y','start_speed','sz_top','sz_bot','pfx_x','pfx_z','px','pz','x0','y0','z0','vx0','vy0','vz0','ax','ay','az','break_y','break_angle','break_lenght','zone','spin_dir','spin_rate']
+					pitch_dict = (dict(pitch_data.attributes.items()))
+					for del_keys_p in pitch_dict.keys():
+						if del_keys_p not in pitch_items:
+							del pitch_dict[del_keys_p]
+					pitch_dict_c = pitch_dict
+				dict_copy.update(pitch_dict_c)
+				pitch_outfile.write(str(dict_copy.values()).lstrip('u') + "\n")
+					
+pitch_outfile.close()
